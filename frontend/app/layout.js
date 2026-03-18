@@ -2,7 +2,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata = {
-  title: "NoteKeeper — Your Private Notes",
+  title: "SHVX NoteKeeper — Your Private Notes",
   description: "A secure multi-user notes application",
 };
 
