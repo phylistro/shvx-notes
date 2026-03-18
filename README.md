@@ -1,148 +1,144 @@
-# 📝 NoteKeeper — Multi-User Notes App
+# SHVX Notes
 
-A full-stack secure notes application with JWT auth, PostgreSQL, and a polished Next.js UI.
+A secure, full-stack multi-user notes application built as part of the SHVX technical assessment.
 
-## Tech Stack
-
-| Layer      | Technology                              |
-|------------|-----------------------------------------|
-| Frontend   | Next.js 14 (App Router), Tailwind CSS   |
-| Backend    | Node.js, Express.js                     |
-| Auth       | JWT (HTTP-only cookies), bcrypt         |
-| Database   | PostgreSQL + Prisma ORM                 |
+## 🔗 Live Demo
+- **Frontend:** https://shvx-notes.vercel.app
+- **Backend:** https://shvx-notes-api.onrender.com
 
 ---
 
-## Folder Structure
+## 🛠️ Tech Stack
 
+| Layer      | Technology                          |
+|------------|-------------------------------------|
+| Frontend   | Next.js 14 (App Router), Tailwind CSS |
+| Backend    | Node.js, Express.js                 |
+| Auth       | JWT (HTTP-only cookies), bcrypt     |
+| Database   | PostgreSQL (Neon)                   |
+| ORM        | Prisma                              |
+| Deployment | Vercel (frontend), Render (backend) |
+
+---
+
+## ✨ Features
+
+-  Secure user registration and login
+-  JWT authentication via HTTP-only cookies
+-  Create, view, edit and delete personal notes
+-  Each user sees only their own notes
+-  Dark / Light mode toggle
+-  Fully responsive design
+
+---
+
+## Security
+
+- Passwords hashed with **bcrypt**
+- JWT stored in **HTTP-only cookies** (not localStorage)
+- Every note query filtered by `userId` from verified JWT
+- Ownership verified before any update or delete
+- CORS configured with credentials support
+
+---
+
+## Database Schema
+```prisma
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  notes     Note[]
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 ```
-notes-app/
+
+---
+
+## 🔌 API Endpoints
+
+### Auth
+| Method | Endpoint              | Description         |
+|--------|-----------------------|---------------------|
+| POST   | /api/auth/register    | Register new user   |
+| POST   | /api/auth/login       | Login + set cookie  |
+| POST   | /api/auth/logout      | Clear cookie        |
+| GET    | /api/auth/me          | Get current user    |
+
+### Notes (Protected)
+| Method | Endpoint          | Description       |
+|--------|-------------------|-------------------|
+| GET    | /api/notes        | Get all my notes  |
+| POST   | /api/notes        | Create a note     |
+| PUT    | /api/notes/:id    | Edit a note       |
+| DELETE | /api/notes/:id    | Delete a note     |
+
+---
+
+##  Project Structure
+```
+shvx-notes/
 ├── backend/
-│   ├── config/db.js
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   └── notesController.js
-│   ├── middleware/authenticate.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   └── notesRoutes.js
-│   ├── prisma/schema.prisma
-│   ├── server.js
-│   ├── package.json
-│   └── .env.example
+│   ├── config/         # Database client
+│   ├── controllers/    # Auth & Notes logic
+│   ├── middleware/      # JWT verification
+│   ├── routes/         # API routes
+│   ├── prisma/         # Schema & migrations
+│   └── server.js       # Express entry point
 │
 └── frontend/
-    ├── app/
-    │   ├── layout.js
-    │   ├── globals.css
-    │   ├── page.js
-    │   ├── login/page.js
-    │   ├── register/page.js
-    │   └── dashboard/page.js
-    ├── components/
-    │   ├── NoteCard.js
-    │   ├── NoteForm.js
-    │   └── NoteModal.js
-    ├── lib/api.js
-    ├── jsconfig.json
-    ├── next.config.js
-    ├── tailwind.config.js
-    ├── postcss.config.js
-    ├── package.json
-    └── .env.local.example
+    ├── app/            # Next.js pages
+    ├── components/     # Reusable UI components
+    └── lib/            # API utility functions
 ```
 
 ---
 
-## Setup Instructions
+## Local Setup
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL running locally (or use [Neon](https://neon.tech) / [Supabase](https://supabase.com) for cloud)
-
----
-
-### 1. Backend
-
+### Backend
 ```bash
 cd backend
-
-# Install dependencies
 npm install
-
-# Set up environment
-cp .env.example .env
-# Edit .env — fill in DATABASE_URL and JWT_SECRET
-
-# Generate Prisma client
+# Create .env  and fill in values
 npx prisma generate
-
-# Run DB migration (creates tables)
 npx prisma migrate dev --name init
-
-# Start the server
 npm run dev
-# ✅ http://localhost:5000
 ```
 
-**`backend/.env`**
+### Frontend
+```bash
+cd frontend
+npm install
+# Create .env.local from .env.local.example
+npm run dev
 ```
-DATABASE_URL="postgresql://postgres:yourpassword@localhost:5432/notesapp"
-JWT_SECRET="your-super-secret-key-min-32-chars"
+
+### Environment Variables
+
+**backend/.env**
+```
+DATABASE_URL="your-neon-postgresql-url"
+JWT_SECRET="your-secret-key"
 PORT=5000
 CLIENT_URL="http://localhost:3000"
 ```
 
----
-
-### 2. Frontend
-
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Set up environment
-cp .env.local.example .env.local
-# Edit .env.local
-
-# Start Next.js dev server
-npm run dev
-# ✅ http://localhost:3000
-```
-
-**`frontend/.env.local`**
+**frontend/.env.local**
 ```
 NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
 ---
 
-## API Reference
-
-### Auth Routes
-| Method | Path                  | Description        |
-|--------|-----------------------|--------------------|
-| POST   | /api/auth/register    | Create account     |
-| POST   | /api/auth/login       | Login + set cookie |
-| POST   | /api/auth/logout      | Clear cookie       |
-| GET    | /api/auth/me          | Get current user   |
-
-### Notes Routes (Protected — requires JWT cookie)
-| Method | Path              | Description        |
-|--------|-------------------|--------------------|
-| GET    | /api/notes        | Get all your notes |
-| POST   | /api/notes        | Create a note      |
-| PUT    | /api/notes/:id    | Edit a note        |
-| DELETE | /api/notes/:id    | Delete a note      |
-
----
-
-## Security Model
-
-- Passwords hashed with **bcrypt** (cost factor 10)
-- JWT stored in **HTTP-only cookie** (inaccessible to JavaScript)
-- Every note query filters by `userId` from the verified JWT
-- Ownership verified before any update or delete
-- CORS configured with `credentials: true` for cookie support
+## Author
+Built for SHVX Technical Assessment
